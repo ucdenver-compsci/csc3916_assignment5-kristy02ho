@@ -99,7 +99,7 @@ router.post("/signin", function (req, res) {
 
 router
   .route("/movies")
-  .get((req, res) => {
+  .get(authJwtController.isAuthenticated, (req, res) => {
     const { reviews } = req.query;
     if (reviews === 'true') {
         const aggregate = [
@@ -283,7 +283,7 @@ router
     }
   });
 
-  router.route("/movies/:id").get((req, res) => {
+  router.route("/movies/:id").get(authJwtController.isAuthenticated, (req, res) => {
     const movieId = req.params.id;
     const { reviews } = req.query;
     Movie.find({ _id: movieId }, (err, movie) => {
