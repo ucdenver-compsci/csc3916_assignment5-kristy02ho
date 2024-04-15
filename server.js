@@ -283,45 +283,45 @@ router
     }
   });
 
-router.route("/movies/:id").get((req, res) => {
-  const movieId = req.params.id;
-  const { reviews } = req.query;
-  Movie.find({ _id: movieId }, (err, movie) => {
-    if (err) {
-      res.status(400).send(err);
-    } else if (movie.length === 0) {
-      res.status(404).json({ error: "Movie not found" });
-    } else if (reviews === "true") {
-      const aggregate = [
-        {
-          $match: { _id: movieId }
-        },
-        {
-          $lookup: {
-            from: 'reviews',
-            localField: '_id',
-            foreignField: 'movieId',
-            as: 'movieReviews'
+  router.route("/movies/:id").get((req, res) => {
+    const movieId = req.params.id;
+    const { reviews } = req.query;
+    Movie.find({ _id: movieId }, (err, movie) => {
+      if (err) {
+        res.status(400).send(err);
+      } else if (movie.length === 0) {
+        res.status(404).json({ error: "Movie not found" });
+      } else if (reviews === "true") {
+        Movie.aggregate([
+          {
+            $match: { _id: mongoose.Types.ObjectId(movieId) },
+          },
+          {
+            $lookup: {
+              from: "reviews", // name of the foreign collection
+              localField: "_id", // field in the orders collection
+              foreignField: "movieId", // field in the items collection
+              as: "movieReviews", // output array where the joined items will be placed
+            },
+            
+          },
+          {
+            $addFields: {
+              avgRating: { $avg: '$movieReviews.rating' }
+            }
           }
-        },
-        {
-          $addFields: {
-            avgRating: { $avg: '$movieReviews.rating' }
+        ]).exec(function (err, result) {
+          if (err) {
+            res.status(404).json({ error: "Reviews not found" });
+          } else {
+              res.status(200).json(result);
           }
-        }
-      ];
-      Movie.aggregate(aggregate).exec(function (err, result) {
-        if (err) {
-          res.status(404).json({ error: "Reviews not found" });
-        } else {
-            res.status(200).json(result);
-        }
-      });
-    } else {
-      res.status(200).json(movie);
-    }
+        });
+      } else {
+        res.status(200).json(movie);
+      }
+    });
   });
-});
 
 app.use("/", router);
 app.listen(process.env.PORT || 8080);
