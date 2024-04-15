@@ -309,7 +309,8 @@ router
             $addFields: {
               avgRating: { $avg: '$movieReviews.rating' }
             }
-          }
+          },
+          { $limit: 1 }
         ]).exec(function (err, result) {
           if (err) {
             res.status(404).json({ error: "Reviews not found" });
