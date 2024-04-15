@@ -315,7 +315,7 @@ router
           if (err) {
             res.status(404).json({ error: "Reviews not found" });
           } else {
-              res.status(200).json(result);
+              res.status(200).json(result[0]);
           }
         });
       } else {
